@@ -14,8 +14,7 @@ include this header from any CPP file.
 Some important differences as compared to UnitTest++ are:
 1. It does not provide exception checks.
 2. It does not provide time checks.
-These two features could easily be added, but the original author did not
-have any need for them.
+These two features could easily be added.
 
 
 Core Macros
@@ -33,7 +32,7 @@ is false, the test is marked as "failed" and diagnostic information is printed.
 
     CHECK(condition)
 
-Create a main() function that will run the tests then the test executable is
+Create a main() function that will run the tests when the test executable is
 run.  This macro must be called in one (and only one) of the cpp files that
 are linked into the executable.  Because it generates a main() function, the
 executable must have no other main() function.
@@ -110,7 +109,7 @@ the "--list" option.
 When a test fails, the failure condition will be printed along with the
 line number within the test program.
 
-    TestEvents.cpp:216: Test assertion failed: !w.IsExpired() [UnitTest]
+    Failed CHECK(!w.IsExpired()) TestEvents.cpp:216 [UnitTest]
 
 
 Adding to CMake
@@ -238,8 +237,7 @@ inline int UnitTest::RunTest(const char *test)
     // First check that the suite name matches.
     const char *tsuite = t->GetSuiteName();
     if ((suiteLen == 0 && *tsuite == '\0') ||
-        (suiteLen > 0 &&
-         strncmp(tsuite, suite, suiteLen) == 0 &&
+        (suiteLen > 0 && strncmp(tsuite, suite, suiteLen) == 0 &&
          tsuite[suiteLen] == '\0'))
     {
       // Check that the test name maches.
@@ -292,28 +290,35 @@ namespace SuiteNamespace{
 inline const char *GetSuiteName() { return ""; }
 }
 
-//! A macro that checks a boolean, the test fails if value is false.
-#define CHECK(t) \
+#define CHECK_WITH_MESSAGE(t, m) \
 if (!(t)) \
 { \
-  std::cerr << __FILE__ << ":" << __LINE__ << ": "; \
-  std::cerr << "Test assertion failed: " << #t << " [UnitTest]\n"; \
+  std::cerr << "Failed " << m << " " \
+            << __FILE__ << ":" << __LINE__ << " [UnitTest]\n"; \
   std::cerr.flush(); \
   UnitTest::TestFailed = true; \
 }
 
+//! A macro that checks a boolean, the test fails if value is false.
+#define CHECK(t) \
+CHECK_WITH_MESSAGE(t, "CHECK(" #t ")")
+
 //! A macro that causes the test to fail unless the values are equal.
 #define CHECK_EQUAL(expected, actual) \
-CHECK((expected) == (actual))
+CHECK_WITH_MESSAGE((expected) == (actual), \
+  "CHECK_EQUAL(" #expected ", " #actual ")")
 
 //! A macro that causes the test to fail unless the arrays are equal.
 #define CHECK_ARRAY_EQUAL(x, y, size) \
 { \
   size_t array_size = (size); \
+  bool equal_check = true; \
   for (size_t array_index = 0; array_index < array_size; array_index++) \
   { \
-    CHECK((x)[array_index] == (y)[array_index]); \
+    equal_check &= ((x)[array_index] == (y)[array_index]); \
   } \
+  CHECK_WITH_MESSAGE(equal_check, \
+    "CHECK_ARRAY_EQUAL(" #x ", " #y ", " #size ")") \
 }
 
 //! A macro that causes the test to fail unless the arrays are equal.
@@ -321,42 +326,56 @@ CHECK((expected) == (actual))
 { \
   size_t array_sizex = (sizex); \
   size_t array_sizey = (sizey); \
+  bool equal_check = true; \
   for (size_t array_idx = 0; array_idx < array_sizex; array_idx++) \
   { \
     for (size_t array_idy = 0; array_idy < array_sizey; array_idy++) \
     { \
-      CHECK((x)[array_idx][array_idy] == (y)[array_idx][array_idy]); \
+      equal_check &= ((x)[array_idx][array_idy] == \
+        (y)[array_idx][array_idy]); \
     } \
   } \
+  CHECK_WITH_MESSAGE(equal_check, \
+    "CHECK_ARRAY2D_EQUAL(" #x ", " #y ", " #sizex ", " #sizey ")") \
 }
 
 //! A macro that causes the test to fail unless the values are close.
 #define CHECK_CLOSE(x, y, tol) \
-CHECK(fabs((x) - (y)) < (tol))
+CHECK_WITH_MESSAGE(fabs((x) - (y)) < (tol), \
+  "CHECK_CLOSE(" #x ", " #y ", " #tol ")")
 
 //! A macro that causes the test to fail unless the arrays are close.
 #define CHECK_ARRAY_CLOSE(x, y, size, tol) \
 { \
+  double check_tolerance = (tol); \
   size_t array_size = (size); \
+  bool equal_check = true; \
   for (size_t array_index = 0; array_index < array_size; array_index++) \
   { \
-    CHECK(fabs((x)[array_index] - (y)[array_index]) < (tol)); \
+    equal_check &= (fabs((x)[array_index] - \
+      (y)[array_index]) < check_tolerance); \
   } \
+  CHECK_WITH_MESSAGE(equal_check, \
+    "CHECK_ARRAY_CLOSE(" #x ", " #y ", " #size ", " #tol ")") \
 }
 
 //! A macro that causes the test to fail unless the arrays are close.
 #define CHECK_ARRAY2D_CLOSE(x, y, sizex, sizey, tol) \
 { \
+  double check_tolerance = (tol); \
   size_t array_sizex = (sizex); \
   size_t array_sizey = (sizey); \
+  bool equal_check = true; \
   for (size_t array_idx = 0; array_idx < array_sizex; array_idx++) \
   { \
     for (size_t array_idy = 0; array_idy < array_sizey; array_idy++) \
     { \
-      CHECK(fabs((x)[array_idx][array_idy] - \
-            (y)[array_idx][array_idy]) < (tol)); \
+      equal_check &= (fabs((x)[array_idx][array_idy] - \
+            (y)[array_idx][array_idy]) < check_tolerance); \
     } \
   } \
+  CHECK_WITH_MESSAGE(equal_check, \
+    "CHECK_ARRAY2D_CLOSE(" #x ", " #y ", " #sizex ", " #sizey ", " #tol ")") \
 }
 
 //! Use this macro to begin a test suite.

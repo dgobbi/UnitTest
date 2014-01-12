@@ -13,8 +13,7 @@ include this header from any CPP file.
 Some important differences as compared to UnitTest++ are:
 1. It does not provide exception checks.
 2. It does not provide time checks.
-These two features could easily be added, but the original author did not
-have any need for them.
+These two features could easily be added.
 
 
 Core Macros
@@ -32,7 +31,7 @@ is false, the test is marked as "failed" and diagnostic information is printed.
 
     CHECK(condition)
 
-Create a main() function that will run the tests then the test executable is
+Create a main() function that will run the tests when the test executable is
 run.  This macro must be called in one (and only one) of the cpp files that
 are linked into the executable.  Because it generates a main() function, the
 executable must have no other main() function.
@@ -109,7 +108,7 @@ the "--list" option.
 When a test fails, the failure condition will be printed along with the
 line number within the test program.
 
-    TestEvents.cpp:216: Test assertion failed: !w.IsExpired() [UnitTest]
+    Failed CHECK(!w.IsExpired()) TestEvents.cpp:216 [UnitTest]
 
 
 Adding to CMake
