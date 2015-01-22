@@ -153,6 +153,9 @@ of the tests that it provides.
 class UnitTest
 {
 public:
+  //! Virtual destructor.
+  virtual ~UnitTest() {}
+
   //! A method to get the name of the test.
   const char *GetTestName();
 
