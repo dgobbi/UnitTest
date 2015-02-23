@@ -135,5 +135,5 @@ of the tests that it provides.
     add_executable(${TEST_EXE} ${TEST_SRCS})
     target_link_libraries(${TEST_EXE} ${TEST_LIBS})
     foreach(TEST_NAME ${TESTS})
-      add_test(${TEST_NAME} ${TEST_EXE} ${TEST_NAME})
+      add_test(NAME ${TEST_NAME} COMMAND ${TEST_EXE} ${TEST_NAME})
     endforeach()
